@@ -1,0 +1,14 @@
+services:
+  vaultwarden:
+    image: "${VAULTWARDEN_IMAGE:?Run bash install.sh first}"
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      DOMAIN: "${VAULTWARDEN_DOMAIN:?Run bash install.sh first}"
+      SIGNUPS_ALLOWED: "${SIGNUPS_ALLOWED:-false}"
+      SIGNUPS_VERIFY: "false"
+      SIGNUPS_DOMAINS_WHITELIST: ""
+      INVITATIONS_ALLOWED: "false"
+    volumes:
+      - ./vw-data:/data

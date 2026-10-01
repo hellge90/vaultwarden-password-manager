@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+vw-data/
+backups/
+logs/
+exports/
+*.log
+*.tmp
+*.temp
+*.csv
+*export*.json
+restore-test/
