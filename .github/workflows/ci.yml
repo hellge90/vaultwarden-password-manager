@@ -1,0 +1,38 @@
+name: Setup checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shell-and-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: bash -n install.sh scripts/*.sh tests/*.sh
+      - name: Run isolated mock tests
+        run: bash tests/run.sh
+      - name: Check shell style when ShellCheck is available
+        run: |
+          if command -v shellcheck >/dev/null 2>&1; then
+            shellcheck install.sh scripts/*.sh tests/*.sh
+          else
+            echo "ShellCheck is unavailable on this runner; skipped."
+          fi
+      - name: Validate closed-by-default Compose configuration
+        run: |
+          env_file="$(mktemp)"
+          trap 'rm -f "$env_file"' EXIT
+          printf '%s\n' \
+            'VAULTWARDEN_IMAGE=vaultwarden/server:1.37.3' \
+            'VAULTWARDEN_DOMAIN=https://pi.example.ts.net' \
+            'SIGNUPS_ALLOWED=false' >"$env_file"
+          env -u SIGNUPS_ALLOWED -u VAULTWARDEN_IMAGE -u VAULTWARDEN_DOMAIN \
+            docker compose --project-directory "$GITHUB_WORKSPACE" \
+            --project-name vaultwarden-ci --env-file "$env_file" \
+            -f compose.yaml config --format json |
+            python3 tests/compose_check.py
